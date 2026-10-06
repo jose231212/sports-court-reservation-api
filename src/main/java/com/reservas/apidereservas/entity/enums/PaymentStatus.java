@@ -1,0 +1,10 @@
+package com.reservas.apidereservas.entity.enums;
+
+public enum PaymentStatus {
+
+    PENDING,
+    COMPLETED,
+    FAILED,
+    REFUNDED
+
+}
