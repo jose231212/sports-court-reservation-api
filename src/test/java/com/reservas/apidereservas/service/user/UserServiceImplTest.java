@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -170,6 +171,63 @@ public class UserServiceImplTest {
 
         verify(userRepository).findAll(pageable);
 
+
+    }
+
+    @Test
+    void shouldUpdateUserSuccessfully(){
+
+        User user = new User();
+
+        user.setId(1L);
+        user.setName("Pedro Martinez");
+        user.setEmail("pmartinez@gmail.com");
+        user.setActive(true);
+        user.setRole(Role.USER);
+        user.setCreatedAt(LocalDateTime.now());
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        UserRequestDTO userRequestDTO = new UserRequestDTO();
+
+        userRequestDTO.setName("Pedro Luciano");
+        userRequestDTO.setEmail("pluciano@gmail.com");
+        userRequestDTO.setPassword("123456");
+
+        when(userRepository.save(any(User.class)))
+                 .thenAnswer(invocation -> invocation.getArgument(0));
+
+        UserResponseDTO result = userServiceImpl.updateUser(1L, userRequestDTO);
+
+        assertEquals(user.getId(), result.getId());
+        assertEquals(userRequestDTO.getName(), result.getName());
+        assertEquals(userRequestDTO.getEmail(), result.getEmail());
+        assertTrue(result.isActive());
+        assertEquals(Role.USER, result.getRole());
+        assertEquals(user.getCreatedAt(), result.getCreatedAt());
+
+        verify(userRepository).findById(1L);
+        verify(userRepository).save(any(User.class));
+
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingNonExistingUser() {
+
+        UserRequestDTO userRequestDTO = new UserRequestDTO();
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            userServiceImpl.updateUser(1L, userRequestDTO);
+        });
+
+        assertEquals("Usuario no encontrado con id: 1", exception.getMessage());
+
+        verify(userRepository).findById(1L);
+        verify(userRepository, never()).save(any(User.class));
 
     }
 

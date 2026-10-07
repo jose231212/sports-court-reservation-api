@@ -93,8 +93,30 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserResponseDTO updateUser(Long id, UserRequestDTO userRequestDTO) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateUser'");
+        
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                            "Usuario no encontrado con id: " + id
+                        ));
+        
+        user.setName(userRequestDTO.getName());
+        user.setEmail(userRequestDTO.getEmail());
+        user.setPassword(userRequestDTO.getPassword());
+
+        User userSaved = userRepository.save(user);
+
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        
+        userResponseDTO.setId(userSaved.getId());
+        userResponseDTO.setName(userSaved.getName());
+        userResponseDTO.setEmail(userSaved.getEmail());
+        userResponseDTO.setActive(userSaved.isActive());
+        userResponseDTO.setCreatedAt(userSaved.getCreatedAt());
+        userResponseDTO.setRole(userSaved.getRole());
+        
+        return userResponseDTO;
+
     }
 
     @Override
