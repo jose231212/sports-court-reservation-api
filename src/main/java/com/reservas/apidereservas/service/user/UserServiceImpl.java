@@ -121,8 +121,16 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public void deleteUser(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteUser'");
+        
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+
+                        new ResourceNotFoundException(
+                            "Usuario no encontrado con id: " + id
+                ));
+
+        userRepository.delete(user);
+
     }
 
 

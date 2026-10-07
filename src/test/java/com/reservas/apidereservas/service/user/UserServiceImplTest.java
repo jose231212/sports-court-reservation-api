@@ -231,4 +231,40 @@ public class UserServiceImplTest {
 
     }
 
+    @Test
+    void shouldDeleteUserSuccessfuly() {
+
+        User user = new User();
+
+        user.setId(1L);
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        userServiceImpl.deleteUser(1L);
+
+        verify(userRepository).findById(1L);
+        verify(userRepository).delete(user);
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenUserDoesNotExistOnDelete() {
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+
+            userServiceImpl.deleteUser(1L);
+
+        });
+
+        assertEquals("Usuario no encontrado con id: 1", exception.getMessage());
+
+        verify(userRepository).findById(1L);
+        verify(userRepository, never()).delete(any(User.class));
+
+    }
+
 }
