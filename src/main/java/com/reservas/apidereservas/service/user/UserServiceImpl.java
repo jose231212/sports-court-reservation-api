@@ -10,6 +10,7 @@ import com.reservas.apidereservas.dto.user.UserRequestDTO;
 import com.reservas.apidereservas.dto.user.UserResponseDTO;
 import com.reservas.apidereservas.entity.User;
 import com.reservas.apidereservas.entity.enums.Role;
+import com.reservas.apidereservas.exception.ResourceNotFoundException;
 import com.reservas.apidereservas.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -48,8 +49,24 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserResponseDTO getUserById(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getUserById'");
+        
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                            "Usuario no encontrado con id: " + id
+                        ));
+
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        
+        userResponseDTO.setId(user.getId());
+        userResponseDTO.setName(user.getName());
+        userResponseDTO.setEmail(user.getEmail());
+        userResponseDTO.setActive(user.isActive());
+        userResponseDTO.setRole(user.getRole());
+        userResponseDTO.setCreatedAt(user.getCreatedAt());
+
+        return  userResponseDTO;
+
     }
 
     @Override
