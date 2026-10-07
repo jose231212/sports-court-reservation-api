@@ -1,6 +1,8 @@
 package com.reservas.apidereservas.service.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.reservas.apidereservas.dto.user.UserRequestDTO;
 import com.reservas.apidereservas.dto.user.UserResponseDTO;
 import com.reservas.apidereservas.entity.User;
+import com.reservas.apidereservas.entity.enums.Role;
 import com.reservas.apidereservas.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +49,9 @@ public class UserServiceImplTest {
         assertEquals(1L, userResponseDTO.getId());
         assertEquals("Pedro Fernandez", userResponseDTO.getName());
         assertEquals("pfernandez@gmail.com", userResponseDTO.getEmail());
+        assertTrue(userResponseDTO.isActive());
+        assertEquals(Role.USER, userResponseDTO.getRole());
+        assertNotNull(userResponseDTO.getCreatedAt());
 
         verify(userRepository).save(any(User.class));
 
