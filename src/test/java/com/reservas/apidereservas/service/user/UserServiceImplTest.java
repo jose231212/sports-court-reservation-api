@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.reservas.apidereservas.dto.user.UserRequestDTO;
 import com.reservas.apidereservas.dto.user.UserResponseDTO;
@@ -104,9 +109,67 @@ public class UserServiceImplTest {
             
         });
 
-        assertEquals("Usuario no encontrado con id: 999L", exception.getMessage());
+        assertEquals("Usuario no encontrado con id: 999", exception.getMessage());
 
         verify(userRepository).findById(999L);
+
+    }
+
+    @Test
+    void shouldGetAllUsersSuccessfully() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        User user2 = new User();
+
+        user2.setId(2L);
+        user2.setName("Aurelio Pereira");
+        user2.setEmail("apereira@gmail.com");
+        user2.setActive(true);
+        user2.setRole(Role.USER);
+        user2.setCreatedAt(LocalDateTime.now());
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        Page<User> userPage = new PageImpl<>(
+            List.of(user1, user2),
+            pageable,
+            2
+        );
+
+        when(userRepository.findAll(pageable))
+                .thenReturn(userPage);
+
+        Page<UserResponseDTO> result = userServiceImpl.getAllUsers(pageable);
+
+        assertEquals(2, result.getContent().size());
+        assertEquals(2, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(2, result.getSize());
+
+        assertEquals(user1.getId(), result.getContent().get(0).getId());
+        assertEquals(user1.getName(), result.getContent().get(0).getName());
+        assertEquals(user1.getEmail(), result.getContent().get(0).getEmail());
+        assertTrue(result.getContent().get(0).isActive());
+        assertEquals(user1.getRole(), result.getContent().get(0).getRole());
+        assertEquals(user1.getCreatedAt(), result.getContent().get(0).getCreatedAt());
+
+        assertEquals(user2.getId(), result.getContent().get(1).getId());
+        assertEquals(user2.getName(), result.getContent().get(1).getName());
+        assertEquals(user2.getEmail(), result.getContent().get(1).getEmail());
+        assertTrue(result.getContent().get(1).isActive());
+        assertEquals(user2.getRole(), result.getContent().get(1).getRole());
+        assertEquals(user2.getCreatedAt(), result.getContent().get(1).getCreatedAt());
+
+        verify(userRepository).findAll(pageable);
+
 
     }
 

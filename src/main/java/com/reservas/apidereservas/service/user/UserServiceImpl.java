@@ -71,8 +71,24 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public Page<UserResponseDTO> getAllUsers(Pageable pageable) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllUsers'");
+        
+        Page<User> users = userRepository.findAll(pageable);
+
+        return  users.map(user -> {
+            
+            UserResponseDTO userResponseDTO = new UserResponseDTO();
+
+            userResponseDTO.setId(user.getId());
+            userResponseDTO.setName(user.getName());
+            userResponseDTO.setEmail(user.getEmail());
+            userResponseDTO.setActive(user.isActive());
+            userResponseDTO.setCreatedAt(user.getCreatedAt());
+            userResponseDTO.setRole(user.getRole());
+
+            return userResponseDTO;
+
+        });
+
     }
 
     @Override
