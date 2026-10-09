@@ -185,7 +185,7 @@ public class UserServiceImplTest {
         user.setActive(true);
         user.setRole(Role.USER);
         user.setCreatedAt(LocalDateTime.now());
-
+        
         when(userRepository.findById(1L))
                 .thenReturn(Optional.of(user));
 
