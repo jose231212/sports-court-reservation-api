@@ -590,6 +590,7 @@ public class ReservationServiceImplTest {
         assertEquals(3, result.getTotalPages());
         assertEquals(2, result.getSize());
         assertEquals(2, result.getContent().size());
+        assertEquals(0, result.getNumber());
 
     }
 
