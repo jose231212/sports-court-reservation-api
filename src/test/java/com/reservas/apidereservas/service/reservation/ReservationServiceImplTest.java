@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.reservas.apidereservas.dto.reservation.ReservationRequestDTO;
 import com.reservas.apidereservas.dto.reservation.ReservationResponseDTO;
@@ -352,6 +357,239 @@ public class ReservationServiceImplTest {
                 });
 
         assertEquals("Cancha no encontrada con id: 1", exception.getMessage());
+
+    }
+
+    @Test
+    void shouldGetReservationByIdSuccessfully() {
+
+        User user = new User();
+
+        user.setId(1L);
+        user.setName("Pedro Fernandez");
+        user.setEmail("pfernandez@gmail.com");
+        user.setActive(true);
+        user.setRole(Role.USER);
+        user.setCreatedAt(LocalDateTime.now());
+
+        Court court = new Court();
+
+        court.setId(1L);
+        court.setName("Baloncesto");
+        court.setDescription("Cancha para jugar baloncesto");
+        court.setType(CourtType.BALONCESTO);
+        court.setLocation("Lorica");
+        court.setPricePerHour(new BigDecimal("1500"));
+        court.setActive(true);
+        court.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation = new Reservation();
+
+        reservation.setId(1L);
+        reservation.setDate(LocalDate.of(2026, 12, 12));
+        reservation.setStartTime(LocalTime.of(10, 0));
+        reservation.setEndTime(LocalTime.of(11, 0));
+        reservation.setStatus(ReservationStatus.PENDING);
+        reservation.setUser(user);
+        reservation.setCourt(court);
+        reservation.setCreatedAt(LocalDateTime.now());
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation));
+
+        ReservationResponseDTO result = reservationServiceImpl.getReservationById(1L);
+
+        assertEquals(reservation.getId(), result.getId());
+        assertEquals(reservation.getDate(), result.getDate());
+        assertEquals(reservation.getStartTime(), result.getStartTime());
+        assertEquals(reservation.getEndTime(), result.getEndTime());
+        assertEquals(reservation.getStatus(), result.getStatus());
+        assertEquals(reservation.getUser().getId(), result.getUserId());
+        assertEquals(reservation.getCourt().getId(), result.getCourtId());
+        assertEquals(reservation.getCreatedAt(), result.getCreatedAt());
+
+    }
+
+    @Test
+    void shouldThrowExceptionWhenReservationDoesNotExist() {
+
+            when(reservationRepository.findById(1L))
+                            .thenReturn(Optional.empty());
+
+            ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                            () -> {
+                                    reservationServiceImpl.getReservationById(1L);
+                            });
+
+            assertEquals("Reservacion no encontrada con id: 1", exception.getMessage());
+
+    }
+
+    @Test 
+    void shouldGetAllReservationSuccessfully() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        User user2 = new User();
+
+        user2.setId(2L);
+        user2.setName("Armando Fernandez");
+        user2.setEmail("afernandez@gmail.com");
+        user2.setActive(true);
+        user2.setRole(Role.USER);
+        user2.setCreatedAt(LocalDateTime.now());
+
+        Court court1 = new Court();
+
+        court1.setId(1L);
+        court1.setName("Baloncesto");
+        court1.setDescription("Cancha para jugar baloncesto");
+        court1.setType(CourtType.BALONCESTO);
+        court1.setLocation("Lorica");
+        court1.setPricePerHour(new BigDecimal("1500"));
+        court1.setActive(true);
+        court1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(1L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 12, 12));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation2 = new Reservation();
+
+        reservation2.setId(2L);
+        reservation2.setDate(LocalDate.of(2026, 12, 12));
+        reservation2.setStartTime(LocalTime.of(8, 0));
+        reservation2.setEndTime(LocalTime.of(9, 0));
+        reservation2.setStatus(ReservationStatus.PENDING);
+        reservation2.setUser(user2);
+        reservation2.setCourt(court2);
+        reservation2.setCreatedAt(LocalDateTime.now());
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        Page<Reservation> reservationPage = new PageImpl<>(
+                List.of(reservation1, reservation2),
+                pageable,
+                2
+        );
+
+        when(reservationRepository.findAll(pageable))
+                .thenReturn(reservationPage);
+        
+        Page<ReservationResponseDTO> result = reservationServiceImpl.getAllReservations(pageable);
+
+        assertEquals(2, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(2, result.getSize());
+        assertEquals(2, result.getContent().size());
+
+        assertEquals(reservation1.getId(), result.getContent().get(0).getId());
+        assertEquals(reservation1.getDate(), result.getContent().get(0).getDate());
+        assertEquals(reservation1.getStartTime(), result.getContent().get(0).getStartTime());
+        assertEquals(reservation1.getEndTime(), result.getContent().get(0).getEndTime());
+        assertEquals(reservation1.getStatus(), result.getContent().get(0).getStatus());
+        assertEquals(reservation1.getUser().getId(), result.getContent().get(0).getUserId());
+        assertEquals(reservation1.getCourt().getId(), result.getContent().get(0).getCourtId());
+        assertEquals(reservation1.getCreatedAt(), result.getContent().get(0).getCreatedAt());
+
+        assertEquals(reservation2.getId(), result.getContent().get(1).getId());
+        assertEquals(reservation2.getDate(), result.getContent().get(1).getDate());
+        assertEquals(reservation2.getStartTime(), result.getContent().get(1).getStartTime());
+        assertEquals(reservation2.getEndTime(), result.getContent().get(1).getEndTime());
+        assertEquals(reservation2.getStatus(), result.getContent().get(1).getStatus());
+        assertEquals(reservation2.getUser().getId(), result.getContent().get(1).getUserId());
+        assertEquals(reservation2.getCourt().getId(), result.getContent().get(1).getCourtId());
+        assertEquals(reservation2.getCreatedAt(), result.getContent().get(1).getCreatedAt());
+
+    }
+
+    @Test 
+    void shouldReturnCorrectPageWhenMoreReservationsExist() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court1 = new Court();
+
+        court1.setId(1L);
+        court1.setName("Baloncesto");
+        court1.setDescription("Cancha para jugar baloncesto");
+        court1.setType(CourtType.BALONCESTO);
+        court1.setLocation("Lorica");
+        court1.setPricePerHour(new BigDecimal("1500"));
+        court1.setActive(true);
+        court1.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 12, 12));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court1);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation2 = new Reservation();
+
+        reservation2.setId(2L);
+        reservation2.setDate(LocalDate.of(2026, 12, 12));
+        reservation2.setStartTime(LocalTime.of(8, 0));
+        reservation2.setEndTime(LocalTime.of(9, 0));
+        reservation2.setStatus(ReservationStatus.PENDING);
+        reservation2.setUser(user1);
+        reservation2.setCourt(court1);
+        reservation2.setCreatedAt(LocalDateTime.now());
+
+        Pageable pageable = PageRequest.of(0, 2);
+
+        Page<Reservation> reservationPage = new PageImpl<>(
+                List.of(reservation1, reservation2),
+                pageable,
+                5
+        );
+
+        when(reservationRepository.findAll(pageable))
+                .thenReturn(reservationPage);
+
+        Page<ReservationResponseDTO> result = reservationServiceImpl.getAllReservations(pageable);
+
+        assertEquals(5, result.getTotalElements());
+        assertEquals(3, result.getTotalPages());
+        assertEquals(2, result.getSize());
+        assertEquals(2, result.getContent().size());
 
     }
 

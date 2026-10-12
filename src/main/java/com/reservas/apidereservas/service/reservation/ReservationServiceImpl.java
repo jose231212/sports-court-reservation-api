@@ -104,14 +104,45 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationResponseDTO getReservationById(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getReservationById'");
+        
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservacion no encontrada con id: " + id));
+
+        ReservationResponseDTO reservationResponseDTO = new ReservationResponseDTO();
+
+        reservationResponseDTO.setId(reservation.getId());
+        reservationResponseDTO.setDate(reservation.getDate());
+        reservationResponseDTO.setStartTime(reservation.getStartTime());
+        reservationResponseDTO.setEndTime(reservation.getEndTime());
+        reservationResponseDTO.setStatus(reservation.getStatus());
+        reservationResponseDTO.setCreatedAt(reservation.getCreatedAt());
+        reservationResponseDTO.setUserId(reservation.getUser().getId());
+        reservationResponseDTO.setCourtId(reservation.getCourt().getId());
+
+        return reservationResponseDTO;
+
     }
 
     @Override
     public Page<ReservationResponseDTO> getAllReservations(Pageable pageable) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllReservations'");
+        
+        Page<Reservation> reservations = reservationRepository.findAll(pageable); 
+
+        return reservations.map(reservation -> {
+            ReservationResponseDTO reservationResponseDTO = new ReservationResponseDTO();
+
+            reservationResponseDTO.setId(reservation.getId());
+            reservationResponseDTO.setDate(reservation.getDate());
+            reservationResponseDTO.setStartTime(reservation.getStartTime());
+            reservationResponseDTO.setEndTime(reservation.getEndTime());
+            reservationResponseDTO.setStatus(reservation.getStatus());
+            reservationResponseDTO.setCreatedAt(reservation.getCreatedAt());
+            reservationResponseDTO.setUserId(reservation.getUser().getId());
+            reservationResponseDTO.setCourtId(reservation.getCourt().getId());
+
+            return  reservationResponseDTO;
+        });
+
     }
 
     @Override
