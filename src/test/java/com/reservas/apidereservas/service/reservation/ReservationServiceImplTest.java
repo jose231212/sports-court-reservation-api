@@ -3,6 +3,7 @@ package com.reservas.apidereservas.service.reservation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -591,6 +593,584 @@ public class ReservationServiceImplTest {
         assertEquals(2, result.getSize());
         assertEquals(2, result.getContent().size());
         assertEquals(0, result.getNumber());
+
+    }
+
+    @Test 
+    void shouldUpdateReservationSuccessfully() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court1 = new Court();
+
+        court1.setId(1L);
+        court1.setName("Baloncesto");
+        court1.setDescription("Cancha para jugar baloncesto");
+        court1.setType(CourtType.BALONCESTO);
+        court1.setLocation("Lorica");
+        court1.setPricePerHour(new BigDecimal("1500"));
+        court1.setActive(true);
+        court1.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court1);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        when(courtRepository.findById(1L))
+                .thenReturn(Optional.of(court1));
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(1L);
+        reservationRequestDTO.setDate(LocalDate.of(2026, 10, 21));
+        reservationRequestDTO.setStartTime(LocalTime.of(14, 0));
+        reservationRequestDTO.setEndTime(LocalTime.of(15, 0));
+        
+        when(reservationRepository.existsOverlappingReservationExcludingReservation(reservationRequestDTO.getCourtId(),
+                        reservationRequestDTO.getDate(), reservationRequestDTO.getStartTime(),
+                        reservationRequestDTO.getEndTime(), ReservationStatus.CANCELLED, 1L
+                )).thenReturn(false);
+
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ReservationResponseDTO result = reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+
+        assertEquals(1L, result.getId());
+        assertEquals(reservationRequestDTO.getCourtId(), result.getCourtId());
+        assertEquals(reservationRequestDTO.getDate(), result.getDate());
+        assertEquals(reservationRequestDTO.getStartTime(), result.getStartTime());
+        assertEquals(reservationRequestDTO.getEndTime(), result.getEndTime());
+        assertEquals(reservation1.getStatus(), result.getStatus());
+        assertEquals(reservation1.getUser().getId(), result.getUserId());
+        assertEquals(reservation1.getCreatedAt(), result.getCreatedAt());
+
+        verify(reservationRepository).save(any(Reservation.class));
+        
+
+    }
+
+    @Test
+    void shouldThrowExceptionWhenReservationDoesNotExistWhenUpdating() {
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+                () -> {
+                        reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+                }
+        );
+
+        assertEquals("Reservacion no encontrada con id: 1", exception.getMessage());
+
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenCourtDoesNotExistWhenUpdatingReservation() {
+        
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court1 = new Court();
+
+        court1.setId(1L);
+        court1.setName("Baloncesto");
+        court1.setDescription("Cancha para jugar baloncesto");
+        court1.setType(CourtType.BALONCESTO);
+        court1.setLocation("Lorica");
+        court1.setPricePerHour(new BigDecimal("1500"));
+        court1.setActive(true);
+        court1.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court1);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.empty());
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(2L);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+                () -> {
+                        reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+                }
+        );
+
+        assertEquals("Cancha no encontrada con id: 2", exception.getMessage());
+
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenCourtIsInactiveWhenUpdatingReservation() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(false);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.of(court2));
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(2L);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> {
+                        reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+                }
+        );
+
+        assertEquals("No se puede realizar reservas en una cancha inactiva", exception.getMessage());
+
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEndTimeIsNotAfterStartTimeWhenUpdatingReservation() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.of(court2));
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(2L);
+        reservationRequestDTO.setStartTime(LocalTime.of(15, 0));
+        reservationRequestDTO.setEndTime(LocalTime.of(14, 0));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> {
+                        reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+                }
+        );
+
+        assertEquals("La hora de finalizacion debe ser posterior a la hora de inicio", exception.getMessage()); 
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenReservationDateIsInThePastWhenUpdatingReservation() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.of(court2));
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+        
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(2L);
+        reservationRequestDTO.setDate(LocalDate.now().minusDays(1));
+        reservationRequestDTO.setStartTime(LocalTime.of(15, 0));
+        reservationRequestDTO.setEndTime(LocalTime.of(16, 0));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> {
+                         reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+                }
+        );
+
+        assertEquals("No se pueden realizar reservas para fechas pasadas", exception.getMessage());
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenStartTimeIsNotAfterCurrentTimeWhenUpdatingReservation() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.of(court2));
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        LocalTime now = LocalTime.now();
+
+        reservationRequestDTO.setCourtId(2L);
+        reservationRequestDTO.setDate(LocalDate.now());
+        reservationRequestDTO.setStartTime(now.minusHours(1));
+        reservationRequestDTO.setEndTime(now.plusHours(1));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> {
+                        reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+                }
+        );
+
+        assertEquals("La hora de inicio debe ser posterior a la hora actual", exception.getMessage());
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenCourtHasOverlappingReservationWhenUpdating() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.of(court2));
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(2L);
+        reservationRequestDTO.setDate(LocalDate.of(2026, 12, 12));
+        reservationRequestDTO.setStartTime(LocalTime.of(10, 0));
+        reservationRequestDTO.setEndTime(LocalTime.of(11, 0));
+
+        when(reservationRepository.existsOverlappingReservationExcludingReservation(
+                reservationRequestDTO.getCourtId(),
+                reservationRequestDTO.getDate(),
+                reservationRequestDTO.getStartTime(), 
+                reservationRequestDTO.getEndTime(), 
+                ReservationStatus.CANCELLED, 
+                1L
+        )).thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> {
+                        reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+
+                }
+        );
+        
+        assertEquals("La cancha ya tiene una reserva en ese horario", exception.getMessage());
+
+    }
+
+    @Test 
+    void shouldAllowUpdatingReservationWithoutConflictingWithItself() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.PENDING);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(LocalDateTime.now());
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.of(court2));
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(2L);
+        reservationRequestDTO.setDate(LocalDate.of(2026, 12, 12));
+        reservationRequestDTO.setStartTime(LocalTime.of(10, 0));
+        reservationRequestDTO.setEndTime(LocalTime.of(11, 0));
+
+        when(reservationRepository.existsOverlappingReservationExcludingReservation(
+                reservationRequestDTO.getCourtId(), 
+                reservationRequestDTO.getDate(), 
+                reservationRequestDTO.getStartTime(), 
+                reservationRequestDTO.getEndTime(), 
+                ReservationStatus.CANCELLED, 
+ 1L
+        )).thenReturn(false);
+
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ReservationResponseDTO result = reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+
+        assertEquals(1L, result.getId());
+        assertEquals(reservationRequestDTO.getDate(), result.getDate());
+        assertEquals(reservationRequestDTO.getStartTime(), result.getStartTime());
+        assertEquals(reservationRequestDTO.getEndTime(), result.getEndTime());
+        assertEquals(ReservationStatus.PENDING, result.getStatus());
+
+        verify(reservationRepository).save(any(Reservation.class));
+
+    }
+
+    @Test 
+    void shouldPreserveUserStatusAndCreatedAtWhenUpdatingReservation() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        LocalDateTime createdAt = LocalDateTime.of(2026, 10, 1, 9, 0);
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.CONFIRMED);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(createdAt);
+
+        when(courtRepository.findById(2L))
+                .thenReturn(Optional.of(court2));
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
+
+        reservationRequestDTO.setCourtId(2L);
+        reservationRequestDTO.setDate(LocalDate.of(2026, 12, 12));
+        reservationRequestDTO.setStartTime(LocalTime.of(10, 0));
+        reservationRequestDTO.setEndTime(LocalTime.of(11, 0));
+        
+        when(reservationRepository.existsOverlappingReservationExcludingReservation(
+                reservationRequestDTO.getCourtId(), 
+                reservationRequestDTO.getDate(), 
+                reservationRequestDTO.getStartTime(), 
+                reservationRequestDTO.getEndTime(), 
+                ReservationStatus.CANCELLED, 
+                1L
+        )).thenReturn(false);
+
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ReservationResponseDTO result = reservationServiceImpl.updateReservation(1L, reservationRequestDTO);
+
+        assertEquals(1L, result.getUserId());
+        assertEquals(ReservationStatus.CONFIRMED, result.getStatus());
+        assertEquals(createdAt, result.getCreatedAt());
 
     }
 

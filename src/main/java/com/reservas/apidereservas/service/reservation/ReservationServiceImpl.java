@@ -147,8 +147,69 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public ReservationResponseDTO updateReservation(Long id, ReservationRequestDTO reservationRequestDTO) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateReservation'");
+        
+        Reservation reservation = reservationRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Reservacion no encontrada con id: " + id));
+
+        Court court = courtRepository.findById(reservationRequestDTO.getCourtId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Cancha no encontrada con id: " + reservationRequestDTO.getCourtId()));
+
+        if (!court.isActive()) {
+            throw new IllegalArgumentException("No se puede realizar reservas en una cancha inactiva");
+        }
+
+        if (!reservationRequestDTO.getEndTime().isAfter(reservationRequestDTO.getStartTime())) {
+            throw new IllegalArgumentException("La hora de finalizacion debe ser posterior a la hora de inicio");
+        }
+
+        if (reservationRequestDTO.getDate().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                "No se pueden realizar reservas para fechas pasadas"
+            );
+        }
+
+        if (reservationRequestDTO.getDate().isEqual(LocalDate.now())
+                && !reservationRequestDTO.getStartTime().isAfter(LocalTime.now())) {
+            throw new IllegalArgumentException(
+                "La hora de inicio debe ser posterior a la hora actual"
+            );
+        }
+        
+        boolean hasOverlap = reservationRepository.existsOverlappingReservationExcludingReservation(
+        court.getId(),
+        reservationRequestDTO.getDate(),
+        reservationRequestDTO.getStartTime(),
+        reservationRequestDTO.getEndTime(),
+        ReservationStatus.CANCELLED,
+        id
+        );
+
+        if (hasOverlap) {
+            throw new IllegalArgumentException(
+                "La cancha ya tiene una reserva en ese horario"
+            );
+        }
+
+        reservation.setDate(reservationRequestDTO.getDate());
+        reservation.setStartTime(reservationRequestDTO.getStartTime());
+        reservation.setEndTime(reservationRequestDTO.getEndTime());
+        reservation.setCourt(court);
+
+        Reservation reservationSave = reservationRepository.save(reservation);
+
+        ReservationResponseDTO reservationResponseDTO = new ReservationResponseDTO();
+
+        reservationResponseDTO.setId(reservationSave.getId());
+        reservationResponseDTO.setDate(reservationSave.getDate());
+        reservationResponseDTO.setStartTime(reservationSave.getStartTime());
+        reservationResponseDTO.setEndTime(reservationSave.getEndTime());
+        reservationResponseDTO.setStatus(reservationSave.getStatus());
+        reservationResponseDTO.setCreatedAt(reservationSave.getCreatedAt());
+        reservationResponseDTO.setUserId(reservationSave.getUser().getId());
+        reservationResponseDTO.setCourtId(reservationSave.getCourt().getId());
+
+        return reservationResponseDTO;
+
     }
 
     @Override
