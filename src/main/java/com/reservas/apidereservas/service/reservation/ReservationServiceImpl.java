@@ -214,8 +214,13 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public void deleteReservation(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteReservation'");
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Reservacion no encontrada con id: " + id));
+
+
+        reservationRepository.delete(reservation);
+
     }
 
 }

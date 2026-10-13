@@ -1174,4 +1174,65 @@ public class ReservationServiceImplTest {
 
     }
 
+    @Test
+    void shouldDeleteReservationSuccessfully() {
+
+        User user1 = new User();
+
+        user1.setId(1L);
+        user1.setName("Pedro Fernandez");
+        user1.setEmail("pfernandez@gmail.com");
+        user1.setActive(true);
+        user1.setRole(Role.USER);
+        user1.setCreatedAt(LocalDateTime.now());
+
+        Court court2 = new Court();
+
+        court2.setId(2L);
+        court2.setName("Baloncesto");
+        court2.setDescription("Cancha para jugar baloncesto");
+        court2.setType(CourtType.BALONCESTO);
+        court2.setLocation("Lorica");
+        court2.setPricePerHour(new BigDecimal("1500"));
+        court2.setActive(true);
+        court2.setCreatedAt(LocalDateTime.now());
+
+        Reservation reservation1 = new Reservation();
+
+        LocalDateTime createdAt = LocalDateTime.of(2026, 10, 1, 9, 0);
+
+        reservation1.setId(1L);
+        reservation1.setDate(LocalDate.of(2026, 10, 20));
+        reservation1.setStartTime(LocalTime.of(10, 0));
+        reservation1.setEndTime(LocalTime.of(11, 0));
+        reservation1.setStatus(ReservationStatus.CONFIRMED);
+        reservation1.setUser(user1);
+        reservation1.setCourt(court2);
+        reservation1.setCreatedAt(createdAt);
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation1));
+
+        reservationServiceImpl.deleteReservation(1L);
+
+        verify(reservationRepository).delete(reservation1);
+
+    }
+
+    @Test
+    void shouldThrowExceptionWhenReservationDoesNotExistWhenDeleting() {
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+                () -> {
+                        reservationServiceImpl.deleteReservation(1L);
+                }
+        );
+
+        assertEquals("Reservacion no encontrada con id: 1", exception.getMessage());
+
+    }
+
 }
