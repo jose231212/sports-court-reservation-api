@@ -307,4 +307,76 @@ public class PaymentServiceImplTest {
 
     }
 
+    @Test 
+    void shouldGetPaymentByIdSuccessfully() {
+
+        Reservation reservation = new Reservation();
+
+        reservation.setId(1L);
+
+        Payment payment = new Payment();
+
+        payment.setId(1L);
+        payment.setReservation(reservation);
+        payment.setAmount(new BigDecimal("2250.00"));
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setMethod(PaymentMethod.CARD);
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.of(payment));
+
+        PaymentResponseDTO result = paymentServiceImpl.getPaymentById(1L);
+
+        assertEquals(payment.getId(), result.getId());
+        assertEquals(payment.getReservation().getId(), result.getReservationId());
+        assertEquals(payment.getAmount(), result.getAmount());
+        assertEquals(payment.getStatus(), result.getStatus());
+        assertEquals(payment.getMethod(), result.getMethod());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenPaymentDoesNotExist() {
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+            () -> {
+                paymentServiceImpl.getPaymentById(1L);
+            }
+        );
+
+        assertEquals("Pago no encontrado con id: 1", exception.getMessage());
+
+    }
+
+    @Test 
+    void shouldMapPaymentToResponseDTOCorrectly() {
+
+        Reservation reservation = new Reservation();
+
+        reservation.setId(1L);
+
+        Payment payment = new Payment();
+
+        payment.setId(1L);
+        payment.setAmount(new BigDecimal("2250.00"));
+        payment.setPaymentDate(LocalDateTime.now());
+        payment.setStatus(PaymentStatus.COMPLETED);
+        payment.setMethod(PaymentMethod.CARD);
+        payment.setReservation(reservation);
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.of(payment));
+
+        PaymentResponseDTO result = paymentServiceImpl.getPaymentById(1L);
+
+        assertEquals(payment.getId(), result.getId());
+        assertEquals(payment.getAmount(), result.getAmount());
+        assertEquals(payment.getPaymentDate(), result.getPaymentDate());
+        assertEquals(payment.getStatus(), result.getStatus());
+        assertEquals(payment.getMethod(), result.getMethod());
+        assertEquals(payment.getReservation().getId(), result.getReservationId());
+    }
+
 }
