@@ -6,4 +6,6 @@ import com.reservas.apidereservas.entity.Payment;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long>{
 
+    boolean existsByReservationId(Long reservationId);
+
 }
