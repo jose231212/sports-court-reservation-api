@@ -99,8 +99,22 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Page<PaymentResponseDTO> getAllPayments(Pageable pageable) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllPayments'");
+        
+        Page<Payment> payments = paymentRepository.findAll(pageable);
+
+        return payments.map(payment -> {
+            PaymentResponseDTO paymentResponseDTO = new PaymentResponseDTO();
+
+            paymentResponseDTO.setId(payment.getId());
+            paymentResponseDTO.setAmount(payment.getAmount());
+            paymentResponseDTO.setPaymentDate(payment.getPaymentDate());
+            paymentResponseDTO.setStatus(payment.getStatus());
+            paymentResponseDTO.setMethod(payment.getMethod());
+            paymentResponseDTO.setReservationId(payment.getReservation().getId());
+
+            return paymentResponseDTO;
+        });
+
     }
 
     @Override

@@ -1,8 +1,10 @@
 package com.reservas.apidereservas.service.payment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -17,6 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.reservas.apidereservas.dto.payment.PaymentRequestDTO;
 import com.reservas.apidereservas.dto.payment.PaymentResponseDTO;
@@ -377,6 +384,111 @@ public class PaymentServiceImplTest {
         assertEquals(payment.getStatus(), result.getStatus());
         assertEquals(payment.getMethod(), result.getMethod());
         assertEquals(payment.getReservation().getId(), result.getReservationId());
+    }
+
+    @Test
+    void shouldGetAllPaymentsSuccessfully() {
+
+        Reservation reservation1 = new Reservation();
+
+        reservation1.setId(1L);
+
+        Reservation reservation2 = new Reservation();
+
+        reservation2.setId(2L);
+
+        Payment payment1 = new Payment();
+
+        payment1.setId(11L);
+        payment1.setAmount(new BigDecimal("1500"));
+        payment1.setPaymentDate(LocalDateTime.now());
+        payment1.setStatus(PaymentStatus.PENDING);
+        payment1.setMethod(PaymentMethod.CARD);
+        payment1.setReservation(reservation1);
+
+        Payment payment2 = new Payment();
+
+        payment2.setId(12L);
+        payment2.setAmount(new BigDecimal("2250"));
+        payment2.setPaymentDate(LocalDateTime.now());
+        payment2.setStatus(PaymentStatus.COMPLETED);
+        payment2.setMethod(PaymentMethod.TRANSFER);
+        payment2.setReservation(reservation2);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Payment> paymentPage = new PageImpl<>(
+            List.of(payment1, payment2),
+            pageable,
+            2
+        );
+
+        when(paymentRepository.findAll(pageable))
+                .thenReturn(paymentPage);
+
+        Page<PaymentResponseDTO> result = paymentServiceImpl.getAllPayments(pageable);
+
+        assertEquals(2, result.getTotalElements());
+        
+        assertEquals(payment1.getAmount(), result.getContent().get(0).getAmount());
+        assertEquals(payment2.getAmount(), result.getContent().get(1).getAmount());
+        
+        assertEquals(payment1.getId(), result.getContent().get(0).getId());
+        assertEquals(payment2.getId(), result.getContent().get(1).getId());
+        
+        assertEquals(reservation1.getId(), result.getContent().get(0).getReservationId());
+        assertEquals(reservation2.getId(), result.getContent().get(1).getReservationId());
+        
+        assertEquals(payment1.getStatus(), result.getContent().get(0).getStatus());
+        assertEquals(payment2.getStatus(), result.getContent().get(1).getStatus());
+
+        assertEquals(payment1.getMethod(), result.getContent().get(0).getMethod());
+        assertEquals(payment2.getMethod(), result.getContent().get(1).getMethod());
+
+    }
+
+    @Test 
+    void shouldReturnEmptyPageWhenNoPaymentsExist() {
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Payment> paymentPage = new PageImpl<>(
+            List.of(),
+            pageable,
+            0
+        );
+
+        when(paymentRepository.findAll(pageable))
+                .thenReturn(paymentPage);
+
+        Page<PaymentResponseDTO> result = paymentServiceImpl.getAllPayments(pageable);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        assertEquals(0, result.getTotalElements());
+        assertEquals(0, result.getTotalPages());
+
+    }
+
+    @Test 
+    void shouldRespectPaginationParameters() {
+
+        Pageable pageable = PageRequest.of(1, 5);
+
+        Page<Payment> paymentPage = new PageImpl<>(
+            List.of(),
+            pageable,
+            0
+        );
+
+        when(paymentRepository.findAll(pageable))
+                .thenReturn(paymentPage);
+
+        Page<PaymentResponseDTO> result = paymentServiceImpl.getAllPayments(pageable);
+
+        assertEquals(1, result.getNumber());
+        assertEquals(5, result.getSize());
+
     }
 
 }
