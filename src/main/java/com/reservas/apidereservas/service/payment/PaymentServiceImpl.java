@@ -119,8 +119,25 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public PaymentResponseDTO updatePayment(Long id, PaymentRequestDTO paymentRequestDTO) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updatePayment'");
+        
+        Payment payment = paymentRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + id));
+
+        payment.setMethod(paymentRequestDTO.getMethod());
+
+        Payment savedPayment = paymentRepository.save(payment);
+
+        PaymentResponseDTO paymentResponseDTO = new PaymentResponseDTO();
+
+        paymentResponseDTO.setId(savedPayment.getId());
+        paymentResponseDTO.setAmount(savedPayment.getAmount());
+        paymentResponseDTO.setPaymentDate(savedPayment.getPaymentDate());
+        paymentResponseDTO.setStatus(savedPayment.getStatus());
+        paymentResponseDTO.setMethod(savedPayment.getMethod());
+        paymentResponseDTO.setReservationId(savedPayment.getReservation().getId());
+
+        return paymentResponseDTO;
+
     }
 
     @Override

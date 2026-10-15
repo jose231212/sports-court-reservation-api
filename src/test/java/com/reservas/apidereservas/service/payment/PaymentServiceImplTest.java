@@ -491,4 +491,97 @@ public class PaymentServiceImplTest {
 
     }
 
+    @Test 
+    void shouldUpdatePaymentSuccessfully() {
+
+        Reservation reservation = new Reservation();
+
+        reservation.setId(1L);
+
+        Payment payment = new Payment();
+
+        payment.setId(1L);
+        payment.setAmount(new BigDecimal("2250.00"));
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setMethod(PaymentMethod.CARD);
+        payment.setReservation(reservation);
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.of(payment));
+
+        PaymentRequestDTO paymentRequestDTO = new PaymentRequestDTO();
+
+        paymentRequestDTO.setReservationId(1L);
+        paymentRequestDTO.setMethod(PaymentMethod.TRANSFER);
+
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PaymentResponseDTO paymentResponseDTO = paymentServiceImpl.updatePayment(1L, paymentRequestDTO);
+
+        assertEquals(payment.getId(), paymentResponseDTO.getId());
+        assertEquals(payment.getAmount(), paymentResponseDTO.getAmount());
+        assertEquals(payment.getStatus(), paymentResponseDTO.getStatus());
+        assertEquals(payment.getMethod(), paymentResponseDTO.getMethod());
+        assertEquals(payment.getReservation().getId(), paymentResponseDTO.getReservationId());
+        assertNull(paymentResponseDTO.getPaymentDate());
+        assertEquals(PaymentMethod.TRANSFER, paymentResponseDTO.getMethod());
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenUpdatingNonExistingPayment() {
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        PaymentRequestDTO paymentRequestDTO = new PaymentRequestDTO();
+
+        paymentRequestDTO.setMethod(PaymentMethod.TRANSFER);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+            () -> {
+                paymentServiceImpl.updatePayment(1L, paymentRequestDTO);
+            }
+        );
+
+        assertEquals("Pago no encontrado con id: 1", exception.getMessage());
+
+    }
+
+    @Test
+    void shouldOnlyUpdatePaymentMethod() {
+
+        Reservation reservation = new Reservation();
+
+        reservation.setId(1L);
+
+        Payment payment = new Payment();
+
+        payment.setId(1L);
+        payment.setAmount(new BigDecimal("2250.00"));
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setMethod(PaymentMethod.CARD);
+        payment.setReservation(reservation);
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.of(payment));
+
+        when(paymentRepository.save(any(Payment.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PaymentRequestDTO paymentRequestDTO = new PaymentRequestDTO();
+
+        paymentRequestDTO.setMethod(PaymentMethod.TRANSFER);
+        paymentRequestDTO.setReservationId(reservation.getId());
+
+        PaymentResponseDTO result = paymentServiceImpl.updatePayment(1L, paymentRequestDTO);
+
+        assertEquals(PaymentMethod.TRANSFER, result.getMethod());
+        assertEquals(new BigDecimal("2250.00"), result.getAmount());
+        assertEquals(PaymentStatus.PENDING, result.getStatus());
+        assertEquals(1L, result.getReservationId());
+
+    }
+
 }
