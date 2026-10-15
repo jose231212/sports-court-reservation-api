@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -581,6 +584,39 @@ public class PaymentServiceImplTest {
         assertEquals(new BigDecimal("2250.00"), result.getAmount());
         assertEquals(PaymentStatus.PENDING, result.getStatus());
         assertEquals(1L, result.getReservationId());
+
+    }
+
+    @Test
+    void shouldDeletePaymentSuccessfully() {
+
+        Payment payment = new Payment();
+
+        payment.setId(1L);
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.of(payment));
+
+        paymentServiceImpl.deletePayment(1L);
+
+        verify(paymentRepository).deleteById(1L);
+
+    }
+
+    @Test 
+    void shouldThrowExceptionWhenDeletingNonExistingPayment() {
+
+        when(paymentRepository.findById(1L))
+                .thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, 
+            () -> {
+                paymentServiceImpl.deletePayment(1L);
+            }
+        );
+
+        assertEquals("Pago no encontrado con id: 1", exception.getMessage());
+        verify(paymentRepository, never()).deleteById(anyLong());
 
     }
 

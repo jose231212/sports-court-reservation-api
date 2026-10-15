@@ -142,8 +142,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void deletePayment(Long id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deletePayment'");
+        
+        Payment payment = paymentRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + id));
+
+        paymentRepository.deleteById(payment.getId());
+
     }
 
 }
