@@ -13,15 +13,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.reservas.apidereservas.dto.ErrorResponseDTO;
 import com.reservas.apidereservas.dto.court.CourtRequestDTO;
 import com.reservas.apidereservas.dto.court.CourtResponseDTO;
 import com.reservas.apidereservas.service.court.CourtService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Courts", description = "Endpoints for creating, retrieving, updating, and deleting courts")
 @RestController
 @RequestMapping("/api/courts")
 @RequiredArgsConstructor
@@ -29,8 +35,13 @@ public class CourtController {
 
     private final CourtService courtService;
 
+    @Operation(summary = "Create court", description = "Creates a new court using the provided court details")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Court created correctly")
+            @ApiResponse(responseCode = "201", description = "Court created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data or court rules violated"),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            )
     })
     @PostMapping
     public ResponseEntity<CourtResponseDTO> createCourt(@Valid @RequestBody CourtRequestDTO courtRequestDTO) {
@@ -40,32 +51,59 @@ public class CourtController {
         return ResponseEntity.status(HttpStatus.CREATED).body(courtResponseDTO);
     }
 
+    @Operation(summary = "Get court by ID", description = "Retrieves a court using its unique identifier")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Court found correctly")
+            @ApiResponse(responseCode = "200", description = "Court retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Court not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            )
     })
     @GetMapping("/{id}")
     public CourtResponseDTO getCourtById(@PathVariable Long id) {
         return courtService.getCourtById(id);
     }
 
+    @Operation(summary = "Get all courts", description = "Retrieves all courts using paginated results")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Courts found correctly")
+            @ApiResponse(responseCode = "200", description = "Courts retrieved successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            )
     })
     @GetMapping
     public Page<CourtResponseDTO> getAllCourts(Pageable pageable) {
         return courtService.getAllCourts(pageable);
     }
 
+    @Operation(summary = "Update court", description = "Updates an existing court using its unique identifier and the provided court details")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Court updated correctly")
+            @ApiResponse(responseCode = "200", description = "Court updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request data or court rules violated"),
+            @ApiResponse(responseCode = "404", description = "Court not found",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            )
     })
     @PutMapping("/{id}")
     public CourtResponseDTO updateCourt(@PathVariable Long id, @Valid @RequestBody CourtRequestDTO courtRequestDTO) {
         return courtService.updateCourt(id, courtRequestDTO);
     }
 
+    @Operation(summary = "Delete court by ID", description = "Deletes an existing court using its unique identifier")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "Court deleted correctly")
+            @ApiResponse(responseCode = "204", description = "Court deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Court not found",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            ),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+            )
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourtById(@PathVariable Long id) {

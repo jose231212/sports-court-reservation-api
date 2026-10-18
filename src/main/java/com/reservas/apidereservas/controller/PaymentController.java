@@ -13,15 +13,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.reservas.apidereservas.dto.ErrorResponseDTO;
 import com.reservas.apidereservas.dto.payment.PaymentRequestDTO;
 import com.reservas.apidereservas.dto.payment.PaymentResponseDTO;
 import com.reservas.apidereservas.service.payment.PaymentService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(
+    name = "Payments", description = "Endpoints for creating, retrieving, updating, and deleting payments"
+)
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -29,7 +37,19 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "Payment created correctly")})
+    @Operation(summary = "Create payment", description = "Creates a new payment using the provided payment details and the associated reservation")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Payment created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request data or payment rules violated",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        ),
+        @ApiResponse(responseCode = "404", description = "Reservation not found",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        ),
+        @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        )
+    })
     @PostMapping
     public ResponseEntity<PaymentResponseDTO> createPayment(@Valid @RequestBody PaymentRequestDTO paymentRequestDTO) {
 
@@ -38,25 +58,65 @@ public class PaymentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(paymentResponseDTO);
     }
 
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Payment found correctly")})
+    @Operation(summary = "Get payment by ID", description = "Retrieves a payment using its unique identifier")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Payment retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        ),
+        @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        )
+    })
     @GetMapping("/{id}")
     public PaymentResponseDTO getPaymentById(@PathVariable Long id) {
         return paymentService.getPaymentById(id);
     }
 
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Payments found correctly")})
+    @Operation(summary = "Retrieve all payments", description = "Retrieves all payments using paginated results")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Payments retrieved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid pagination parameters",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        ),
+        @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        )
+    })
     @GetMapping 
     public Page<PaymentResponseDTO> getAllPayments(Pageable pageable){
         return paymentService.getAllPayments(pageable);
     }
 
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Payment updated correctly")})
+    @Operation(summary = "Update a payment", description = "Updates an existing payment using its unique identifier and the provided payment details")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Payment updated successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request data or payment rules violated",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        ),
+        @ApiResponse(responseCode = "404", description = "Payment or associated reservation not found",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        ),
+        @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        )
+    })
     @PutMapping("/{id}")
     public PaymentResponseDTO updatePayment(@PathVariable Long id, @Valid @RequestBody PaymentRequestDTO paymentRequestDTO) {
         return paymentService.updatePayment(id, paymentRequestDTO);
     }
 
-    @ApiResponses({@ApiResponse(responseCode = "204", description = "Payment deleted correctly")})
+    @Operation(summary = "Delete payment by ID", description = "Deletes an existing payment using its unique identifier")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Payment deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Payment not found",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        ),
+        @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+        )
+
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePaymentById(@PathVariable Long id) {
 
