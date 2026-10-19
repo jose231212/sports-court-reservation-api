@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.reservas.apidereservas.dto.user.UserRequestDTO;
@@ -21,13 +22,15 @@ public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Override
     public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
 
         User user = new User();
         user.setName(userRequestDTO.getName());
         user.setEmail(userRequestDTO.getEmail());
-        user.setPassword(userRequestDTO.getPassword());
+        user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
         user.setActive(true);
         user.setCreatedAt(LocalDateTime.now());
         user.setRole(Role.USER);
@@ -102,7 +105,7 @@ public class UserServiceImpl implements UserService{
         
         user.setName(userRequestDTO.getName());
         user.setEmail(userRequestDTO.getEmail());
-        user.setPassword(userRequestDTO.getPassword());
+        user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
 
         User userSaved = userRepository.save(user);
 

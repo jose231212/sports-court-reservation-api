@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.reservas.apidereservas.dto.user.UserRequestDTO;
 import com.reservas.apidereservas.dto.user.UserResponseDTO;
@@ -35,6 +36,9 @@ public class UserServiceImplTest {
     
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks 
     private UserServiceImpl userServiceImpl;
@@ -54,6 +58,9 @@ public class UserServiceImplTest {
                         user.setId(1L);
                         return  user;
                     });
+        
+        when(passwordEncoder.encode("123456"))
+                    .thenReturn("password-encrypted");            
 
         UserResponseDTO userResponseDTO = userServiceImpl.createUser(userRequestDTO);
 
@@ -63,7 +70,8 @@ public class UserServiceImplTest {
         assertTrue(userResponseDTO.isActive());
         assertEquals(Role.USER, userResponseDTO.getRole());
         assertNotNull(userResponseDTO.getCreatedAt());
-
+        
+        verify(passwordEncoder).encode("123456");
         verify(userRepository).save(any(User.class));
 
     }
@@ -198,6 +206,9 @@ public class UserServiceImplTest {
         when(userRepository.save(any(User.class)))
                  .thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(passwordEncoder.encode("123456"))
+                 .thenReturn("password-encrypted");
+
         UserResponseDTO result = userServiceImpl.updateUser(1L, userRequestDTO);
 
         assertEquals(user.getId(), result.getId());
@@ -207,6 +218,7 @@ public class UserServiceImplTest {
         assertEquals(Role.USER, result.getRole());
         assertEquals(user.getCreatedAt(), result.getCreatedAt());
 
+        verify(passwordEncoder).encode("123456");
         verify(userRepository).findById(1L);
         verify(userRepository).save(any(User.class));
 
