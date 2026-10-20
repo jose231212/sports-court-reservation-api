@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -73,6 +75,20 @@ public class GlobalExceptionHandler {
                 .body(errorResponseDTO);
 
     }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponseDTO> authorizationDeniedException(
+        AuthorizationDeniedException exception) {
+            ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO();
+
+            errorResponseDTO.setStatus(HttpStatus.FORBIDDEN.value());
+            errorResponseDTO.setMessage("No tienes permisos para realizar esta operacion");
+            errorResponseDTO.setTimestamp(LocalDateTime.now());
+
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body(errorResponseDTO);
+        }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> exception(Exception exception) {

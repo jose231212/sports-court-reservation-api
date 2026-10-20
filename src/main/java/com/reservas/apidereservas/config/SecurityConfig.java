@@ -16,6 +16,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.reservas.apidereservas.service.security.CustomUserDetailsService;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableMethodSecurity 
 public class SecurityConfig {
@@ -40,6 +42,14 @@ public class SecurityConfig {
                 .addFilterBefore(
                     jwtAuthenticationFilter, 
                     UsernamePasswordAuthenticationFilter.class
+                )
+                .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) ->
+                    response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        "No estás autenticado"
+                            )
+                    )
                 )
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/auth/**").permitAll()
