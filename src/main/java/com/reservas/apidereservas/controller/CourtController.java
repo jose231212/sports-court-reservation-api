@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/courts")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "bearer-key")
 public class CourtController {
 
     private final CourtService courtService;
@@ -43,6 +46,7 @@ public class CourtController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             )
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<CourtResponseDTO> createCourt(@Valid @RequestBody CourtRequestDTO courtRequestDTO) {
 
@@ -90,6 +94,7 @@ public class CourtController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             )
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public CourtResponseDTO updateCourt(@PathVariable Long id, @Valid @RequestBody CourtRequestDTO courtRequestDTO) {
         return courtService.updateCourt(id, courtRequestDTO);
@@ -105,6 +110,7 @@ public class CourtController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             )
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCourtById(@PathVariable Long id) {
         courtService.deleteCourt(id);
