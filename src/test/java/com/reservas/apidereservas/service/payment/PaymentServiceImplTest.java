@@ -42,6 +42,7 @@ import com.reservas.apidereservas.entity.enums.Role;
 import com.reservas.apidereservas.exception.ResourceNotFoundException;
 import com.reservas.apidereservas.repository.PaymentRepository;
 import com.reservas.apidereservas.repository.ReservationRepository;
+import com.reservas.apidereservas.service.security.CurrentUserProvider;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentServiceImplTest {
@@ -51,6 +52,9 @@ public class PaymentServiceImplTest {
 
     @Mock 
     private ReservationRepository reservationRepository;
+
+    @Mock
+    private CurrentUserProvider currentUserProvider;
 
     @InjectMocks 
     private PaymentServiceImpl paymentServiceImpl;
@@ -320,9 +324,13 @@ public class PaymentServiceImplTest {
     @Test 
     void shouldGetPaymentByIdSuccessfully() {
 
-        Reservation reservation = new Reservation();
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.USER);
 
+        Reservation reservation = new Reservation();
         reservation.setId(1L);
+        reservation.setUser(user);
 
         Payment payment = new Payment();
 
@@ -334,6 +342,9 @@ public class PaymentServiceImplTest {
 
         when(paymentRepository.findById(1L))
                 .thenReturn(Optional.of(payment));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
 
         PaymentResponseDTO result = paymentServiceImpl.getPaymentById(1L);
 
@@ -363,9 +374,13 @@ public class PaymentServiceImplTest {
     @Test 
     void shouldMapPaymentToResponseDTOCorrectly() {
 
-        Reservation reservation = new Reservation();
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.USER);
 
+        Reservation reservation = new Reservation();
         reservation.setId(1L);
+        reservation.setUser(user);
 
         Payment payment = new Payment();
 
@@ -379,6 +394,9 @@ public class PaymentServiceImplTest {
         when(paymentRepository.findById(1L))
                 .thenReturn(Optional.of(payment));
 
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
+
         PaymentResponseDTO result = paymentServiceImpl.getPaymentById(1L);
 
         assertEquals(payment.getId(), result.getId());
@@ -391,6 +409,10 @@ public class PaymentServiceImplTest {
 
     @Test
     void shouldGetAllPaymentsSuccessfully() {
+        
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.ADMIN);
 
         Reservation reservation1 = new Reservation();
 
@@ -426,6 +448,9 @@ public class PaymentServiceImplTest {
             2
         );
 
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
+
         when(paymentRepository.findAll(pageable))
                 .thenReturn(paymentPage);
 
@@ -453,6 +478,10 @@ public class PaymentServiceImplTest {
     @Test 
     void shouldReturnEmptyPageWhenNoPaymentsExist() {
 
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.ADMIN);
+
         Pageable pageable = PageRequest.of(0, 10);
 
         Page<Payment> paymentPage = new PageImpl<>(
@@ -460,6 +489,9 @@ public class PaymentServiceImplTest {
             pageable,
             0
         );
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
 
         when(paymentRepository.findAll(pageable))
                 .thenReturn(paymentPage);
@@ -476,6 +508,10 @@ public class PaymentServiceImplTest {
     @Test 
     void shouldRespectPaginationParameters() {
 
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.ADMIN);
+
         Pageable pageable = PageRequest.of(1, 5);
 
         Page<Payment> paymentPage = new PageImpl<>(
@@ -483,6 +519,9 @@ public class PaymentServiceImplTest {
             pageable,
             0
         );
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
 
         when(paymentRepository.findAll(pageable))
                 .thenReturn(paymentPage);
@@ -497,9 +536,13 @@ public class PaymentServiceImplTest {
     @Test 
     void shouldUpdatePaymentSuccessfully() {
 
-        Reservation reservation = new Reservation();
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.USER);
 
+        Reservation reservation = new Reservation();
         reservation.setId(1L);
+        reservation.setUser(user);
 
         Payment payment = new Payment();
 
@@ -511,6 +554,9 @@ public class PaymentServiceImplTest {
 
         when(paymentRepository.findById(1L))
                 .thenReturn(Optional.of(payment));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
 
         PaymentRequestDTO paymentRequestDTO = new PaymentRequestDTO();
 
@@ -555,9 +601,13 @@ public class PaymentServiceImplTest {
     @Test
     void shouldOnlyUpdatePaymentMethod() {
 
-        Reservation reservation = new Reservation();
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.USER);
 
+        Reservation reservation = new Reservation();
         reservation.setId(1L);
+        reservation.setUser(user);
 
         Payment payment = new Payment();
 
@@ -569,6 +619,9 @@ public class PaymentServiceImplTest {
 
         when(paymentRepository.findById(1L))
                 .thenReturn(Optional.of(payment));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
 
         when(paymentRepository.save(any(Payment.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -589,13 +642,24 @@ public class PaymentServiceImplTest {
 
     @Test
     void shouldDeletePaymentSuccessfully() {
+        
+        User user = new User();
+        user.setId(1L);
+        user.setRole(Role.USER);
+
+        Reservation reservation = new Reservation();
+        reservation.setId(1L);
+        reservation.setUser(user);
 
         Payment payment = new Payment();
-
         payment.setId(1L);
+        payment.setReservation(reservation);
 
         when(paymentRepository.findById(1L))
                 .thenReturn(Optional.of(payment));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
 
         paymentServiceImpl.deletePayment(1L);
 

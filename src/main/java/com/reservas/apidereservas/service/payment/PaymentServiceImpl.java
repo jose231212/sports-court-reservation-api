@@ -6,17 +6,21 @@ import java.time.Duration;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.reservas.apidereservas.dto.payment.PaymentRequestDTO;
 import com.reservas.apidereservas.dto.payment.PaymentResponseDTO;
 import com.reservas.apidereservas.entity.Payment;
 import com.reservas.apidereservas.entity.Reservation;
+import com.reservas.apidereservas.entity.User;
 import com.reservas.apidereservas.entity.enums.PaymentStatus;
 import com.reservas.apidereservas.entity.enums.ReservationStatus;
+import com.reservas.apidereservas.entity.enums.Role;
 import com.reservas.apidereservas.exception.ResourceNotFoundException;
 import com.reservas.apidereservas.repository.PaymentRepository;
 import com.reservas.apidereservas.repository.ReservationRepository;
+import com.reservas.apidereservas.service.security.CurrentUserProvider;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +31,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
 
     private final ReservationRepository reservationRepository;
+
+    private final CurrentUserProvider currentUserProvider;
 
     @Override
     public PaymentResponseDTO createPayment(PaymentRequestDTO paymentRequestDTO) {
@@ -84,6 +90,18 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + id));
 
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isOwner = payment.getReservation().getUser().getId()
+                .equals(currentUser.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new AuthorizationDeniedException(
+                "No tienes permisos para realizar esta consulta"
+            );
+        }
+
         PaymentResponseDTO paymentResponseDTO = new PaymentResponseDTO();
 
         paymentResponseDTO.setId(payment.getId());
@@ -100,7 +118,16 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Page<PaymentResponseDTO> getAllPayments(Pageable pageable) {
         
-        Page<Payment> payments = paymentRepository.findAll(pageable);
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        Page<Payment> payments;
+
+        if (currentUser.getRole() == Role.ADMIN) {
+            payments = paymentRepository.findAll(pageable);
+        }
+        else{
+            payments = paymentRepository.findByReservationUserId(currentUser.getId(), pageable);
+        }
 
         return payments.map(payment -> {
             PaymentResponseDTO paymentResponseDTO = new PaymentResponseDTO();
@@ -122,6 +149,18 @@ public class PaymentServiceImpl implements PaymentService {
         
         Payment payment = paymentRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + id));
+
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isOwner = payment.getReservation().getUser().getId()
+                .equals(currentUser.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new AuthorizationDeniedException(
+                "No tienes permisos para modificar este pago"
+            );
+        }
 
         payment.setMethod(paymentRequestDTO.getMethod());
 
@@ -145,6 +184,18 @@ public class PaymentServiceImpl implements PaymentService {
         
         Payment payment = paymentRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + id));
+
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isOwner = payment.getReservation().getUser().getId()
+                .equals(currentUser.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new AuthorizationDeniedException(
+                "No tienes permisos para modificar este pago"
+            );
+        }
 
         paymentRepository.deleteById(payment.getId());
 
