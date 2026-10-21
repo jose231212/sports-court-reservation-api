@@ -6,6 +6,7 @@ import java.time.LocalTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.reservas.apidereservas.dto.reservation.ReservationRequestDTO;
@@ -14,6 +15,7 @@ import com.reservas.apidereservas.entity.Court;
 import com.reservas.apidereservas.entity.Reservation;
 import com.reservas.apidereservas.entity.User;
 import com.reservas.apidereservas.entity.enums.ReservationStatus;
+import com.reservas.apidereservas.entity.enums.Role;
 import com.reservas.apidereservas.exception.ResourceNotFoundException;
 import com.reservas.apidereservas.repository.CourtRepository;
 import com.reservas.apidereservas.repository.ReservationRepository;
@@ -108,6 +110,20 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservacion no encontrada con id: " + id));
 
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isOwner = reservation.getUser().getId()
+                .equals(currentUser.getId());
+
+        if (!isAdmin && !isOwner) {
+            
+            throw new AuthorizationDeniedException(
+                "No tienes permisos para consultar esta reserva"
+            );
+
+        }
+
         ReservationResponseDTO reservationResponseDTO = new ReservationResponseDTO();
 
         reservationResponseDTO.setId(reservation.getId());
@@ -126,7 +142,16 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Page<ReservationResponseDTO> getAllReservations(Pageable pageable) {
         
-        Page<Reservation> reservations = reservationRepository.findAll(pageable); 
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        Page<Reservation> reservations;
+
+        if (currentUser.getRole() == Role.ADMIN) {
+            reservations = reservationRepository.findAll(pageable);
+        }
+        else{
+            reservations = reservationRepository.findByUserId(currentUser.getId(), pageable);
+        }
 
         return reservations.map(reservation -> {
             ReservationResponseDTO reservationResponseDTO = new ReservationResponseDTO();
@@ -153,6 +178,21 @@ public class ReservationServiceImpl implements ReservationService {
 
         Court court = courtRepository.findById(reservationRequestDTO.getCourtId())
                         .orElseThrow(() -> new ResourceNotFoundException("Cancha no encontrada con id: " + reservationRequestDTO.getCourtId()));
+
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+
+        boolean isOwner = reservation.getUser().getId()
+                .equals(currentUser.getId());
+
+        if (!isAdmin && !isOwner) {
+            
+            throw new AuthorizationDeniedException(
+                "No tienes permisos para modificar esta reservas"
+            );
+
+        }
 
         if (!court.isActive()) {
             throw new IllegalArgumentException("No se puede realizar reservas en una cancha inactiva");
@@ -218,6 +258,19 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reservacion no encontrada con id: " + id));
 
+        User currentUser = currentUserProvider.getCurrentUser();
+
+        boolean isAdmin = currentUser.getRole() == Role.ADMIN;
+        boolean isOwner = reservation.getUser().getId()
+                .equals(currentUser.getId());
+
+        if (!isAdmin && !isOwner) {
+            
+            throw new AuthorizationDeniedException(
+                "No tienes permisos para eliminar esta reserva"
+            );    
+
+        }
 
         reservationRepository.delete(reservation);
 

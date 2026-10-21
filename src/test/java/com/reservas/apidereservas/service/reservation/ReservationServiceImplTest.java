@@ -19,7 +19,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -399,6 +398,9 @@ public class ReservationServiceImplTest {
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation));
 
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user);
+
         ReservationResponseDTO result = reservationServiceImpl.getReservationById(1L);
 
         assertEquals(reservation.getId(), result.getId());
@@ -447,6 +449,18 @@ public class ReservationServiceImplTest {
         user2.setActive(true);
         user2.setRole(Role.USER);
         user2.setCreatedAt(LocalDateTime.now());
+
+        User admin = new User();
+
+        admin.setId(3L);
+        admin.setName("Administrador");
+        admin.setEmail("admin@gmail.com");
+        admin.setActive(true);
+        admin.setRole(Role.ADMIN);
+        admin.setCreatedAt(LocalDateTime.now());
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(admin);
 
         Court court1 = new Court();
 
@@ -583,6 +597,18 @@ public class ReservationServiceImplTest {
                 5
         );
 
+        User admin = new User();
+
+        admin.setId(3L);
+        admin.setName("Administrador");
+        admin.setEmail("admin@gmail.com");
+        admin.setActive(true);
+        admin.setRole(Role.ADMIN);
+        admin.setCreatedAt(LocalDateTime.now());
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(admin);
+
         when(reservationRepository.findAll(pageable))
                 .thenReturn(reservationPage);
 
@@ -635,6 +661,9 @@ public class ReservationServiceImplTest {
 
         when(courtRepository.findById(1L))
                 .thenReturn(Optional.of(court1));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
 
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
@@ -781,6 +810,9 @@ public class ReservationServiceImplTest {
         when(courtRepository.findById(2L))
                 .thenReturn(Optional.of(court2));
 
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
+
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
         reservationRequestDTO.setCourtId(2L);
@@ -834,6 +866,9 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation1));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
 
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
@@ -890,6 +925,9 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation1));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
         
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
@@ -947,6 +985,9 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation1));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
 
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
@@ -1006,6 +1047,9 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation1));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
 
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
@@ -1073,6 +1117,9 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation1));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
 
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
@@ -1147,6 +1194,9 @@ public class ReservationServiceImplTest {
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation1));
 
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
+
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
         reservationRequestDTO.setCourtId(2L);
@@ -1212,6 +1262,9 @@ public class ReservationServiceImplTest {
 
         when(reservationRepository.findById(1L))
                 .thenReturn(Optional.of(reservation1));
+
+        when(currentUserProvider.getCurrentUser())
+                .thenReturn(user1);
 
         reservationServiceImpl.deleteReservation(1L);
 
