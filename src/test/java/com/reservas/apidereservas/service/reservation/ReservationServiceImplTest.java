@@ -668,7 +668,7 @@ public class ReservationServiceImplTest {
         ReservationRequestDTO reservationRequestDTO = new ReservationRequestDTO();
 
         reservationRequestDTO.setCourtId(1L);
-        reservationRequestDTO.setDate(LocalDate.of(2026, 10, 21));
+        reservationRequestDTO.setDate(LocalDate.of(2026, 11, 21));
         reservationRequestDTO.setStartTime(LocalTime.of(14, 0));
         reservationRequestDTO.setEndTime(LocalTime.of(15, 0));
         
