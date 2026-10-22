@@ -21,6 +21,7 @@ import com.reservas.apidereservas.service.user.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -29,7 +30,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Users", description = "Endpoint for creating, retrieving, updating, and deleting users")
+@Tag(name = "Users", description = "Endpoints for creating, retrieving, updating, and deleting users")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -41,12 +42,15 @@ public class UserController {
     @Operation(summary = "Create user", description = "Creates a new user using the provided user details")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "User created correctly"),
-            @ApiResponse(responseCode = "400", description = "Invalid request data or user rules violated",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+            @ApiResponse(responseCode = "400", description = "Invalid request data or user rules violated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                    {
+                      "status": 500,
+                      "message": "Error interno del servidor",
+                      "timestamp": "2026-10-22T10:30:00",
+                      "errors": null
+                    }
+                    """)))
     })
     @PostMapping
     public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO userRequestDTO) {
@@ -59,12 +63,15 @@ public class UserController {
     @Operation(summary = "Get user by ID", description = "Retrieves a user using their unique identifier")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User found successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                    {
+                      "status": 500,
+                      "message": "Error interno del servidor",
+                      "timestamp": "2026-10-22T10:30:00",
+                      "errors": null
+                    }
+                    """)))
     })
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
@@ -75,12 +82,15 @@ public class UserController {
     @Operation(summary = "Get all users", description = "Retrieves all users using paginated results")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Users found successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+            @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                    {
+                      "status": 500,
+                      "message": "Error interno del servidor",
+                      "timestamp": "2026-10-22T10:30:00",
+                      "errors": null
+                    }
+                    """)))
     })
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
@@ -91,15 +101,16 @@ public class UserController {
     @Operation(summary = "Update user", description = "Updates an existing user using their unique identifier and the provided user details")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request data or user rules violated",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            ),
-            @ApiResponse(responseCode = "404", description = "User not found",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+            @ApiResponse(responseCode = "400", description = "Invalid request data or user rules violated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                    {
+                      "status": 500,
+                      "message": "Error interno del servidor",
+                      "timestamp": "2026-10-22T10:30:00",
+                      "errors": null
+                    }
+                    """)))
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
@@ -108,15 +119,18 @@ public class UserController {
         return userService.updateUser(id, userRequestDTO);
     }
 
-    @Operation(summary = "Delete court by ID", description = "Deletes an existing user using their unique identifier")
+    @Operation(summary = "Delete user by ID", description = "Deletes an existing user using their unique identifier")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            ),
-            @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                    {
+                      "status": 500,
+                      "message": "Error interno del servidor",
+                      "timestamp": "2026-10-22T10:30:00",
+                      "errors": null
+                    }
+                    """)))
     })
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
