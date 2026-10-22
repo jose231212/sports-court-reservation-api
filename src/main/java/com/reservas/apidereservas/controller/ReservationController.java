@@ -20,6 +20,7 @@ import com.reservas.apidereservas.service.reservation.ReservationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -47,8 +48,14 @@ public class ReservationController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             ),
             @ApiResponse(responseCode = "500", description = "An unexpected internal server error occurred",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """)))
     })
     @PostMapping
     public ResponseEntity<ReservationResponseDTO> createReservation(
@@ -66,7 +73,14 @@ public class ReservationController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             ),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """))
             )
     })
     @GetMapping("/{id}")
@@ -81,7 +95,14 @@ public class ReservationController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             ),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """))
             )
     })
     @GetMapping
@@ -99,8 +120,14 @@ public class ReservationController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             ),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """)))
     })
     @PutMapping("/{id}")
     public ReservationResponseDTO updateReservation(@PathVariable Long id,
@@ -115,8 +142,14 @@ public class ReservationController {
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
         ),
         @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-        )
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """)))
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReservationById(@PathVariable Long id) {
