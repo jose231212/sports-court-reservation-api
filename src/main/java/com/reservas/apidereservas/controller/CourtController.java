@@ -21,6 +21,7 @@ import com.reservas.apidereservas.service.court.CourtService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,7 +44,14 @@ public class CourtController {
             @ApiResponse(responseCode = "201", description = "Court created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid request data or court rules violated"),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """))
             )
     })
     @PreAuthorize("hasRole('ADMIN')")
@@ -62,7 +70,14 @@ public class CourtController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             ),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """))
             )
     })
     @GetMapping("/{id}")
@@ -75,7 +90,15 @@ public class CourtController {
             @ApiResponse(responseCode = "200", description = "Courts retrieved successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "status": 500,
+                                      "message": "Error interno del servidor",
+                                      "timestamp": "2026-10-22T10:30:00",
+                                      "errors": null
+                                    }
+                                    """))
             )
     })
     @GetMapping
@@ -91,7 +114,14 @@ public class CourtController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             ),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """))
             )
     })
     @PreAuthorize("hasRole('ADMIN')")
@@ -107,8 +137,14 @@ public class CourtController {
                 content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
             ),
             @ApiResponse(responseCode = "500", description = "Unexpected internal server error",
-                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class))
-            )
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class), examples = @ExampleObject(value = """
+                            {
+                              "status": 500,
+                              "message": "Error interno del servidor",
+                              "timestamp": "2026-10-22T10:30:00",
+                              "errors": null
+                            }
+                            """)))
     })
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
